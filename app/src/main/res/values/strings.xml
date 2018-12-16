@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TAU Login</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="phone">Phone</string>
+    <string name="profile">Profile</string>
+    <string name="auth">Auth</string>
+    <string name="login">Login</string>
+</resources>
