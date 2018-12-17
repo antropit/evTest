@@ -1,11 +1,14 @@
 package ru.fry.evtest
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
+import android.provider.ContactsContract
+import android.support.annotation.IdRes
 import android.support.v7.app.AppCompatActivity
 import android.text.TextWatcher
 import android.view.View
@@ -29,8 +32,8 @@ class MainActivity : AppCompatActivity() {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             if (msg.what != userAPI.SUCCESS) {
-                findViewById<Button>(R.id.btnAuth).isEnabled = true
-                findViewById<Button>(R.id.btnLogin).isEnabled = true
+                btnAuth.isEnabled = true
+                btnLogin.isEnabled = true
 
                 Toast.makeText(this@MainActivity, "Error: "+msg.what, Toast.LENGTH_SHORT).show()
             }
@@ -38,6 +41,15 @@ class MainActivity : AppCompatActivity() {
             setProfile()
         }
     }
+    private val etName: EditText by bind(R.id.etName)
+    private val etEmail: EditText by bind(R.id.etEmail)
+    private val etPhone: EditText by bind(R.id.etPhone)
+
+    private val btnAuth: Button by bind(R.id.btnAuth)
+    private val btnLogin: Button by bind(R.id.btnLogin)
+    
+    private val textProfileCap: TextView by bind(R.id.textProfileCap)
+    private val textProfile: TextView by bind(R.id.textProfile)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,16 +69,16 @@ class MainActivity : AppCompatActivity() {
                 s: CharSequence, start: Int,
                 before: Int, count: Int
             ) {
-                findViewById<Button>(R.id.btnLogin).isEnabled = true
-                findViewById<Button>(R.id.btnAuth).isEnabled = true
+                btnLogin.isEnabled = true
+                btnAuth.isEnabled = true
 
                 textUpdated = true
             }
         }
 
-        findViewById<EditText>(R.id.etName).addTextChangedListener(textWatcher)
-        findViewById<EditText>(R.id.etEmail).addTextChangedListener(textWatcher)
-        findViewById<EditText>(R.id.etPhone).addTextChangedListener(textWatcher)
+        etName.addTextChangedListener(textWatcher)
+        etEmail.addTextChangedListener(textWatcher)
+        etPhone.addTextChangedListener(textWatcher)
 
         loadText()
         setProfile()
@@ -83,36 +95,40 @@ class MainActivity : AppCompatActivity() {
 
         when(v.id) {
             R.id.btnAuth -> userAPI.auth(
-                findViewById<EditText>(R.id.etName).text.toString(),
-                findViewById<EditText>(R.id.etEmail).text.toString(),
-                findViewById<EditText>(R.id.etPhone).text.toString(),
+                etName.text.toString(),
+                etEmail.text.toString(),
+                etPhone.text.toString(),
                 h)
             R.id.btnLogin -> {
-                findViewById<Button>(R.id.btnLogin).isEnabled = false
-                findViewById<Button>(R.id.btnAuth).isEnabled = false
-                userAPI.login(findViewById<EditText>(R.id.etPhone).text.toString(), h)
+                btnLogin.isEnabled = false
+                btnAuth.isEnabled = false
+                userAPI.login(etPhone.text.toString(), h)
             }
             R.id.btnProfile -> userAPI.getProfile(h)
             else -> Toast.makeText(this, "No such button", Toast.LENGTH_SHORT).show()
         }
     }
 
+    fun <T : View> Activity.bind(@IdRes res : Int) : Lazy<T> {
+        @Suppress("UNCHECKED_CAST")
+        return lazy(LazyThreadSafetyMode.NONE) { findViewById(res) as T }
+    }
 
     private fun loadText() {
         val sPref = getPreferences(Context.MODE_PRIVATE)
 
-        findViewById<EditText>(R.id.etName).setText(sPref.getString(CONST_NAME, ""))
-        findViewById<EditText>(R.id.etEmail).setText(sPref.getString(CONST_EMAIL, ""))
-        findViewById<EditText>(R.id.etPhone).setText(sPref.getString(CONST_PHONE, ""))
+        etName.setText(sPref.getString(CONST_NAME, ""))
+        etEmail.setText(sPref.getString(CONST_EMAIL, ""))
+        etPhone.setText(sPref.getString(CONST_PHONE, ""))
 
         textUpdated = false
     }
 
     private fun saveText() {
         val ed: SharedPreferences.Editor = getPreferences(Context.MODE_PRIVATE).edit()
-        ed.putString(CONST_NAME, findViewById<EditText>(R.id.etName).getText().toString())
-        ed.putString(CONST_EMAIL, findViewById<EditText>(R.id.etEmail).getText().toString())
-        ed.putString(CONST_PHONE, findViewById<EditText>(R.id.etPhone).getText().toString())
+        ed.putString(CONST_NAME, etName.getText().toString())
+        ed.putString(CONST_EMAIL, etEmail.getText().toString())
+        ed.putString(CONST_PHONE, etPhone.getText().toString())
         ed.apply()
 
         textUpdated = false
@@ -120,13 +136,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun setProfile() {
         if (userAPI.profile.count() > 0) {
-            findViewById<TextView>(R.id.textProfileCap).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.textProfile).visibility = View.VISIBLE
+            textProfileCap.visibility = View.VISIBLE
+            textProfile.visibility = View.VISIBLE
         } else {
-            findViewById<TextView>(R.id.textProfileCap).visibility = View.INVISIBLE
-            findViewById<TextView>(R.id.textProfile).visibility = View.INVISIBLE
+            textProfileCap.visibility = View.INVISIBLE
+            textProfile.visibility = View.INVISIBLE
         }
-        findViewById<TextView>(R.id.textProfile).text = userAPI.profile
+        textProfile.text = userAPI.profile
     }
 
 }
